@@ -1,7 +1,8 @@
 # aoc_zig
 
-This is a template for the [Advent of Code](https://adventofcode.com/) puzzles in Zig.
-It aims to provide zig users a easy way to write solutions and download / submit them directly from the cli.
+This is my repository for the [Advent of Code](https://adventofcode.com/) challenges in [Zig](https://ziglang.org/).
+Other than overengineered solutions and highly optimized trash,
+you will maybe find this also neat build system for fetching and submitting aoc code.
 ## Features
 - Automatic input data fetching
 - Submit your result with a command!
@@ -20,13 +21,21 @@ zig build 1
 ```
 If no year is provided, the current year will be used.
 If no day is provided, the current day will be used.
-### Submit:
+### Test:
 ```bash
-zig build submit_<day> -Dyear=<year
+zig build test:<day> -Dyear=<year
 ```
 example for day 1 (automatic year detection):
 ```bash
-zig build submit_1
+zig build test:1
+```
+### Submit:
+```bash
+zig build submit:<day> -Dyear=<year
+```
+example:
+```bash
+zig build submit:1
 ```
 ### Hard reset / clean project:
 ```bash
@@ -41,4 +50,4 @@ feel free to submit a PR.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details

@@ -23,38 +23,7 @@ inline fn digitToInt(c: u8) u32 {
     return @as(u32, c - '0');
 }
 
-const Counts = struct {
-    max_pos: usize,
-    file_count: usize,
-    space_count: usize,
-};
-
-inline fn countElements(input: []const u8) Counts {
-    var max_pos: usize = 0;
-    var file_count: usize = 0;
-    var space_count: usize = 0;
-
-    // Input already done on higher level
-    @setRuntimeSafety(false);
-    for (input, 0..) |c, i| {
-        if (!isDigit(c)) continue;
-        const size = digitToInt(c);
-        max_pos += size;
-        if (i % 2 == 0) {
-            file_count += 1;
-        } else {
-            space_count += 1;
-        }
-    }
-
-    return .{
-        .max_pos = max_pos,
-        .file_count = file_count,
-        .space_count = space_count,
-    };
-}
-
-fn calculatePart1(allocator: std.mem.Allocator, input: []const u8, max_pos: usize) !u64 {
+fn one(allocator: std.mem.Allocator, input: []const u8, max_pos: usize) !u64 {
     var positions = try allocator.alloc(u32, max_pos);
     var pos_len: usize = 0;
     var id: u32 = 0;
@@ -92,9 +61,9 @@ fn calculatePart1(allocator: std.mem.Allocator, input: []const u8, max_pos: usiz
     return checksum;
 }
 
-fn calculatePart2(allocator: std.mem.Allocator, input: []const u8, counts: Counts) !u64 {
-    var files = try allocator.alloc(Interval, counts.file_count);
-    var spaces = try allocator.alloc(Interval, counts.space_count);
+fn two(allocator: std.mem.Allocator, input: []const u8, file_count: usize, space_count: usize) !u64 {
+    var files = try allocator.alloc(Interval, file_count);
+    var spaces = try allocator.alloc(Interval, space_count);
 
     var position: u32 = 0;
     var id: u32 = 0;
@@ -149,12 +118,28 @@ pub fn main(input: []const u8) !struct { part1: u64, part2: u64, time: f64 } {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    const counts = countElements(input);
-    const part1_result = try calculatePart1(allocator, input, counts.max_pos);
-    const part2_result = try calculatePart2(allocator, input, counts);
+    var max_pos: usize = 0;
+    var file_count: usize = 0;
+    var space_count: usize = 0;
+
+    // Input already done on higher level
+    @setRuntimeSafety(false);
+    for (input, 0..) |c, i| {
+        if (!isDigit(c)) continue;
+        const size = digitToInt(c);
+        max_pos += size;
+        if (i % 2 == 0) {
+            file_count += 1;
+        } else {
+            space_count += 1;
+        }
+    }
+
+    const part1 = try one(allocator, input, max_pos);
+    const part2 = try two(allocator, input, file_count, space_count);
 
     const time = @as(f64, @floatFromInt(start.lap())) / std.time.ns_per_us;
-    return .{ .part1 = part1_result, .part2 = part2_result, .time = time };
+    return .{ .part1 = part1, .part2 = part2, .time = time };
 }
 
 test "day 9" {

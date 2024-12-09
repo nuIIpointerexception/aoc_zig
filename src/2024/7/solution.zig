@@ -1,65 +1,80 @@
 const std = @import("std");
 
-fn solve(comptime num_ops: u8, target: u64, result: u64, nums: []const u64) u64 {
-    if (nums.len == 0) return @intFromBool(result == target) * target;
-    const n = nums[0];
-    const rest = nums[1..];
-
-    const sum = solve(num_ops, target, result + n, rest);
-    if (sum > 0) return sum;
-
-    const product = solve(num_ops, target, result * n, rest);
-    if (product > 0) return product;
-
-    if (num_ops == 3) {
-        const shift = @as(u6, if (n >= 100) 2 else if (n >= 10) 1 else 0) * 2;
-        const adj: u64 = @as(u64, 10) << shift;
-        return solve(num_ops, target, result * adj + n, rest);
-    }
-    return 0;
+inline fn nextPowerOf10(x: u64) u64 {
+    var power: u64 = 10;
+    while (x >= power) power *= 10;
+    return power;
 }
 
-fn parseNum(line: []const u8, nums: *[15]u64) struct { target: u64, len: u8 } {
-    var i: u8 = 0;
-    var it = std.mem.tokenizeAny(u8, line, ": ");
-    const target = std.fmt.parseInt(u64, it.next().?, 10) catch unreachable;
+fn canConstructTarget(target: u64, ops: []const u64, comptime allowConcatenation: bool) bool {
+    if (ops.len == 1) return target == ops[0];
+    if (ops.len == 0) return target == 0;
 
-    while (it.next()) |n| : (i += 1) {
-        nums[i] = std.fmt.parseInt(u64, n, 10) catch unreachable;
+    const current = ops[ops.len - 1];
+    const remaining = ops[0 .. ops.len - 1];
+
+    if (allowConcatenation) {
+        const power = nextPowerOf10(current);
+        if (target >= current and @rem(target - current, power) == 0) {
+            if (canConstructTarget((target - current) / power, remaining, allowConcatenation)) return true;
+        }
     }
-    return .{ .target = target, .len = i };
+
+    if (@rem(target, current) == 0) {
+        if (canConstructTarget(target / current, remaining, allowConcatenation)) return true;
+    }
+
+    if (target >= current) {
+        if (canConstructTarget(target - current, remaining, allowConcatenation)) return true;
+    }
+
+    return false;
+}
+
+fn solve(lines: []const []const u8) struct { part1: u64, part2: u64 } {
+    var part1: u64 = 0;
+    var part2: u64 = 0;
+    var numbers: [64]u64 = undefined;
+
+    for (lines) |line| {
+        var count: usize = 0;
+        numbers[0] = 0;
+
+        for (line) |char| {
+            if (char >= '0' and char <= '9') {
+                numbers[count] = numbers[count] * 10 + (char - '0');
+            } else if (numbers[count] != 0) {
+                count += 1;
+                numbers[count] = 0;
+            }
+        }
+        if (numbers[count] != 0) count += 1;
+
+        const target = numbers[0];
+        const operands = numbers[1..count];
+
+        if (canConstructTarget(target, operands, false)) {
+            part1 += target;
+            part2 += target;
+        } else if (canConstructTarget(target, operands, true)) {
+            part2 += target;
+        }
+    }
+
+    return .{ .part1 = part1, .part2 = part2 };
 }
 
 pub fn main(input: []const u8) !struct { part1: u64, part2: u64, time: f64 } {
-    var start = try std.time.Timer.start();
-    var sum1: u64 = 0;
-    var sum2: u64 = 0;
-    var nums: [15]u64 = undefined;
+    var timer = try std.time.Timer.start();
+    var lines = std.ArrayList([]const u8).init(std.heap.page_allocator);
+    defer lines.deinit();
 
-    var lines = std.mem.tokenizeScalar(u8, input, '\n');
-    while (lines.next()) |line| {
-        const parsed = parseNum(line, &nums);
-        sum1 += solve(2, parsed.target, nums[0], nums[1..parsed.len]);
-        sum2 += solve(3, parsed.target, nums[0], nums[1..parsed.len]);
+    var it = std.mem.splitSequence(u8, std.mem.trim(u8, input, &std.ascii.whitespace), "\n");
+    while (it.next()) |line| {
+        try lines.append(line);
     }
 
-    const time = @as(f64, @floatFromInt(start.lap())) / std.time.ns_per_us;
-    return .{ .part1 = sum1, .part2 = sum2, .time = time };
-}
-
-test "day 7" {
-    const test_input =
-        \\190: 10 19
-        \\3267: 81 40 27
-        \\83: 17 5
-        \\156: 15 6
-        \\7290: 6 8 6 15
-        \\161011: 16 10 13
-        \\192: 17 8 14
-        \\21037: 9 7 18 13
-        \\292: 11 6 16 20
-    ;
-    const result = try main(test_input);
-    try std.testing.expectEqual(3749, result.part1);
-    try std.testing.expectEqual(11387, result.part2);
+    const result = solve(lines.items);
+    const time = @as(f64, @floatFromInt(timer.read())) / std.time.ns_per_us;
+    return .{ .part1 = result.part1, .part2 = result.part2, .time = time };
 }

@@ -23,20 +23,6 @@ inline fn digitToInt(c: u8) u32 {
     return @as(u32, c - '0');
 }
 
-pub fn main(input: []const u8) !struct { part1: u64, part2: u64, time: f64 } {
-    var start = try std.time.Timer.start();
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
-    const counts = countElements(input);
-    const part1_result = try calculatePart1(allocator, input, counts.max_pos);
-    const part2_result = try calculatePart2(allocator, input, counts);
-
-    const time = @as(f64, @floatFromInt(start.lap())) / std.time.ns_per_ms;
-    return .{ .part1 = part1_result, .part2 = part2_result, .time = time };
-}
-
 const Counts = struct {
     max_pos: usize,
     file_count: usize,
@@ -155,6 +141,20 @@ fn calculatePart2(allocator: std.mem.Allocator, input: []const u8, counts: Count
     }
 
     return checksum;
+}
+
+pub fn main(input: []const u8) !struct { part1: u64, part2: u64, time: f64 } {
+    var start = try std.time.Timer.start();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const counts = countElements(input);
+    const part1_result = try calculatePart1(allocator, input, counts.max_pos);
+    const part2_result = try calculatePart2(allocator, input, counts);
+
+    const time = @as(f64, @floatFromInt(start.lap())) / std.time.ns_per_us;
+    return .{ .part1 = part1_result, .part2 = part2_result, .time = time };
 }
 
 test "day 9" {

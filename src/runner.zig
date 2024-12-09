@@ -16,7 +16,13 @@ pub fn run(comptime year: u32, comptime day: u32, comptime solution: type, shoul
     defer alloc.free(input);
 
     const result = try solution.main(input);
-    std.debug.print("Time: {d:.3} us\n", .{result.time});
+    if (result.time < 1.0) {
+        std.debug.print("Time: {d:.3} ns\n", .{result.time * 1000});
+    } else if (result.time > 1000.0) {
+        std.debug.print("Time: {d:.3} ms\n", .{result.time / 1000});
+    } else {
+        std.debug.print("Time: {d:.3} us\n", .{result.time});
+    }
     std.debug.print("Solutions:\n- Part 1: {}\n- Part 2: {}\n", .{ result.part1, result.part2 });
 
     if (should_submit) {

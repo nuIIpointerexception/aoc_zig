@@ -38,7 +38,7 @@ pub fn build(b: *std.Build) !void {
         b.step("run", "Run current day").dependOn(&base_run.step);
 
         const base_test = b.addTest(.{
-            .root_source_file = b.path(b.fmt("src/{d}/{d}/solution.zig", .{ year, current_day })),
+            .root_source_file = b.path(b.fmt("src/{d}/{d:0>2}/solution.zig", .{ year, current_day })),
             .target = target,
             .optimize = optimize,
         });
@@ -77,7 +77,7 @@ pub fn build(b: *std.Build) !void {
 
         const test_step = b.step(b.fmt("test:{d}", .{day}), b.fmt("Test day {d}", .{day}));
         test_step.dependOn(&b.addRunArtifact(b.addTest(.{
-            .root_source_file = b.path(b.fmt("src/{d}/{d}/solution.zig", .{ year, day_num })),
+            .root_source_file = b.path(b.fmt("src/{d}/{d:0>2}/solution.zig", .{ year, day_num })),
             .target = target,
             .optimize = optimize,
         })).step);
@@ -150,7 +150,7 @@ fn createRunStep(b: *std.Build, year: u16, day: u9, target: std.Build.ResolvedTa
         step: std.Build.Step,
         pub fn make(step: *std.Build.Step, options: std.Build.Step.MakeOptions) anyerror!void {
             const self: *@This() = @fieldParentPtr("step", step);
-            const folder = self.b.fmt("src/{d}/{d}", .{ self.year, self.day });
+            const folder = self.b.fmt("src/{d}/{d:0>2}", .{ self.year, self.day });
             const source_path = self.b.fmt("{s}/solution.zig", .{folder});
 
             try std.fs.cwd().makePath(folder);
@@ -208,7 +208,7 @@ fn ensureFileExists(dir: std.fs.Dir, path: []const u8, template_content: []const
 }
 
 fn ensureDayFiles(b: *std.Build, year: u16, day: u9) !void {
-    const folder = b.fmt("src/{d}/{d}", .{ year, day });
+    const folder = b.fmt("src/{d}/{d:0>2}", .{ year, day });
     try std.fs.cwd().makePath(folder);
     try ensureFileExists(std.fs.cwd(), b.fmt("{s}/solution.zig", .{folder}), @embedFile("src/template.zig"));
 }

@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub fn getInput(alloc: std.mem.Allocator, comptime year: u32, comptime day: u32) ![]const u8 {
     var path_buf: [128]u8 = undefined;
-    const input_path = try std.fmt.bufPrint(&path_buf, "src/{d}/{d}/input.txt", .{ year, day });
+    const input_path = try std.fmt.bufPrint(&path_buf, "src/{d}/{d:0>2}/input.txt", .{ year, day });
 
     return std.fs.cwd().readFileAlloc(alloc, input_path, std.math.maxInt(usize)) catch |err| switch (err) {
         error.FileNotFound => try fetchInput(alloc, year, day, input_path),
